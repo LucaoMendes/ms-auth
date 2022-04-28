@@ -5,7 +5,7 @@ const app = express();
 app.get('/status',(req: Request,res : Response,next : NextFunction) => {
     console.log("Status")
     res.status(200).send({
-        foo : 'bar'
+        foo : 'Sucesso Total'
     })
 })
 
