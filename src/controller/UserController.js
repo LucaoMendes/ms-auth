@@ -7,9 +7,9 @@ module.exports={
     async index(req,res) {
         const users = await User.findAll()
         if(users.length <= 0)
-            res.status(StatusCodes.NOT_FOUND).json({
+            res.status(StatusCodes.OK).json({
                 success: true,
-                msg: 'No users to get'
+                msg: 'users empty'
             })
         else
             res.status(StatusCodes.OK).json(users)
@@ -21,21 +21,30 @@ module.exports={
             email && 
             password)
         {
-            const emailRequire = Sequelize.where(
-                Sequelize.fn('lower',Sequelize.col('email')),
-                Sequelize.fn('lower',email)
-            )
-            const user = await User.findOrCreate({
-                where : {
-                    emailRequire,
+            const user = await User.findOne({where:{email}})
+            if(user)
+                return res.status(StatusCodes.OK).json({
+                    success: false,
+                    msg: 'email in database',
+                    user
+                })
+            else{
+                const newUser = await User.create({
                     name,
-                    
-                },
-                
-            })
-            console.log(user[1])
+                    email,
+                    password
+                })
+                return res.status(StatusCodes.OK).json({
+                    success: true,
+                    msg: 'success in store account',
+                    newUser
+                })
+            }
         }
-        res.status(StatusCodes.OK).json({})
+        return res.status(StatusCodes.BAD_REQUEST).json({
+            success:false,
+            msg: 'no body? please send name email password'
+        })
     },
 
     async fromIndex(req,res){
@@ -43,7 +52,10 @@ module.exports={
         if(!isNaN(uid)){
             const user = await User.findByPk(uid)
             if(user)
-                return res.status(200).json({user})
+                return res.status(200).json({
+                    success:true,
+                    user
+                })
             return res.status(403).json({
                 success: false,
                 msg: 'user not found'
@@ -66,7 +78,9 @@ module.exports={
             if(user)
                 if(user.password == password)
                     return res.status(200).json({
-                        success : true
+                        success : true,
+                        auth : true,
+                        user 
                     })
                 else
                     return res.status(401).json({
